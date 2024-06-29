@@ -1,0 +1,88 @@
+package ceos.springvote.presentation;
+
+import ceos.springvote.application.VoteService;
+import ceos.springvote.domain.Member;
+import ceos.springvote.domain.Team;
+import ceos.springvote.jwt.domain.CustomUserDetails;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import java.util.List;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+@RequestMapping("/votes")
+@Tag(name = "Vote Controller", description = "투표 관련 컨트롤러")
+@RequiredArgsConstructor
+public class VoteController {
+    private final VoteService voteService;
+
+    @GetMapping("/leader")
+    @Operation(summary = "후보 목록 조회", description = "투표할 수 있는 후보자 목록을 조회합니다 (일단 회원가입한 사람들은 전부 후보가 되도록 함)")
+    public ResponseEntity<List<Member>> candidatesList() {
+        return ResponseEntity.ok(voteService.getAllCandidates());
+    }
+
+    @GetMapping("/demo")
+    @Operation(summary = "팀 목록 조회", description = "투표할 수 있는 팀 목록을 조회합니다")
+    public ResponseEntity<List<Team>> teamList() {
+        return ResponseEntity.ok(voteService.getAllTeams());
+    }
+
+
+    @PostMapping("/demo/{teamId}")
+    @Operation(summary = "데모데이 투표", description = "데모데이 투표수를 +1")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 성공 시 성공 메시지를 반환합니다"),
+            @ApiResponse(responseCode = "404", description = "팀이 존재하지 않을 경우 에러 메시지를 반환합니다"),
+            @ApiResponse(responseCode = "409", description = "이미 투표를 진행했을 경우 에러 메시지를 반환합니다")
+    })
+    public ResponseEntity<List<Team>> voteDemo(@PathVariable Long teamId
+                                                    , @AuthenticationPrincipal CustomUserDetails currentUser) {
+        return ResponseEntity.ok(voteService.addDemoVoteCount(teamId, currentUser.getId()));
+    }
+
+    @DeleteMapping("/demo/{teamId}")
+    @Operation(summary = "데모데이 투표 취소", description = "데모데이 투표수를 -1")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 취소 성공 시 성공 메시지를 반환합니다"),
+            @ApiResponse(responseCode = "404", description = "팀 혹은 이전 투표가 존재하지 않을 경우 에러 메시지를 반환합니다")
+    })
+    public ResponseEntity<List<Team>> cancelVoteDemo(@PathVariable Long teamId
+                                                          , @AuthenticationPrincipal CustomUserDetails currentUser) {
+        return ResponseEntity.ok(voteService.subDemoVoteCount(teamId ,currentUser.getId()));
+    }
+
+    @PostMapping("/leader/{memberId}")
+    @Operation(summary = "파트장 투표", description = "파트장 투표수를 +1")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 성공 시 성공 메시지를 반환합니다"),
+            @ApiResponse(responseCode = "404", description = "후보자가 존재하지 않을 경우 에러 메시지를 반환합니다"),
+            @ApiResponse(responseCode = "409", description = "이미 투표를 진행했을 경우 에러 메시지를 반환합니다")
+    })
+    public ResponseEntity<List<Member>> voteLeader(@PathVariable Long memberId
+                                                      , @AuthenticationPrincipal CustomUserDetails currentUser) {
+        return ResponseEntity.ok(voteService.addLeaderVoteCount(memberId, currentUser.getId()));
+    }
+
+    @DeleteMapping("/leader/{memberId}")
+    @Operation(summary = "파트장 투표 취소", description = "파트장 투표수를 -1")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "투표 성공 시 성공 메시지를 반환합니다"),
+            @ApiResponse(responseCode = "404", description = "후보자가 존재하지 않을 경우 에러 메시지를 반환합니다")
+    })
+    public ResponseEntity<List<Member>> cancelVoteLeader(@PathVariable Long memberId
+                                                            , @AuthenticationPrincipal CustomUserDetails currentUser) {
+        return ResponseEntity.ok(voteService.subLeaderVoteCount(memberId, currentUser.getId()));
+    }
+
+}
