@@ -1,0 +1,27 @@
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:h2:mem:vote;MODE=MySQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+        show_sql: true
+        format_sql: true
+
+  jwt:
+    secret: eb973eb8026b11ee34041cb8352e7e7fbbaddebd209c2274cb88bd7e6bac6587f4215520e0a39afee20f8b364e426d9ff0751daff1759c7011df3eeedf7ea816
+    expired: 86400000
